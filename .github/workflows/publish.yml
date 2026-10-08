@@ -6,28 +6,49 @@ on:
 
 permissions:
   contents: read
-  # Trusted publishing (OIDC) and provenance
-  id-token: write
 
 jobs:
-  publish:
+  check:
+    name: Check the version
     runs-on: ubuntu-latest
-    environment: npm
+    outputs:
+      publish: ${{ steps.version.outputs.publish }}
     steps:
       - uses: actions/checkout@v7
+      - id: version
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match package.json version ${version}"
+            exit 1
+          fi
+          # A version published by hand (the first one, before trusted publishing is set up) is not published again
+          if npm view "${name}@${version}" version > /dev/null 2>&1; then
+            echo "::notice::${name}@${version} is already on npm: nothing to publish"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  publish:
+    needs: check
+    if: needs.check.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      # Trusted publishing (OIDC) and provenance
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      # Yarn comes from the "packageManager" field of package.json, through Corepack
       - run: corepack enable
       - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: yarn
           registry-url: https://registry.npmjs.org
-      - name: Check that the tag matches the package version
-        run: |
-          version=$(node -p "require('./package.json').version")
-          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
-            echo "::error::Tag ${GITHUB_REF_NAME} does not match package.json version ${version}"
-            exit 1
-          fi
       - run: yarn install --immutable
       - run: yarn lint
       - run: yarn build
