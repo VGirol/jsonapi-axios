@@ -1,0 +1,28 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+  // Checks the rolled-up declarations against the committed report in etc/: a change of the public API fails the
+  // build until the report is updated with "yarn api:update" (and the change reviewed in the diff).
+  "mainEntryPointFilePath": "<projectFolder>/dist/index.d.ts",
+  "newlineKind": "lf",
+  "apiReport": {
+    "enabled": true,
+    "reportFolder": "<projectFolder>/etc/",
+    "reportTempFolder": "<projectFolder>/temp/"
+  },
+  "docModel": { "enabled": false },
+  "dtsRollup": { "enabled": false },
+  "tsdocMetadata": { "enabled": false },
+  "messages": {
+    "extractorMessageReporting": {
+      // A type used by a public signature must be exported
+      "ae-forgotten-export": { "logLevel": "error", "addToApiReportFile": false },
+      // No @public / @beta tags: everything exported is public
+      "ae-missing-release-tag": { "logLevel": "none" },
+      // Every public class, member, function and type has a TSDoc comment
+      "ae-undocumented": { "logLevel": "warning", "addToApiReportFile": false }
+    },
+    "tsdocMessageReporting": {
+      "default": { "logLevel": "warning" }
+    }
+  }
+}

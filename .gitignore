@@ -1,0 +1,25 @@
+# Dependencies
+node_modules
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+
+# Build output
+dist
+*.tsbuildinfo
+coverage
+
+# api-extractor
+/temp/
+
+# Logs
+*.log
+
+# Editors and OS
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.sw?
